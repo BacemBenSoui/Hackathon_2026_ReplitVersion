@@ -1,0 +1,53 @@
+
+-- ==============================================================================
+-- SCHEMA DE REFERENCE : HACKATHON FNCT 2026
+-- Ce fichier contient la configuration idéale de la base de données.
+-- Mis à jour pour inclure les colonnes de dépôt de dossier (video, poc, etc.)
+-- ==============================================================================
+
+-- 1. SECURISATION DES FONCTIONS
+ALTER FUNCTION public.handle_new_user() SET search_path = public;
+
+-- 2. STRUCTURE DE LA TABLE TEAMS (Mise à jour)
+-- Assurez-vous que ces colonnes existent pour que le formulaire de dépôt fonctionne
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS motivation_url text;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS video_url text;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS poc_url text;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS secondary_theme text;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS secondary_theme_description text;
+
+-- Note : L'application utilise "Statut" (PascalCase) pour le workflow.
+-- Si votre colonne est "status" (minuscule), renommez-la ou ajustez le code.
+-- ALTER TABLE public.teams RENAME COLUMN status TO "Statut";
+
+-- 3. INDEX DE PERFORMANCE
+CREATE INDEX IF NOT EXISTS idx_join_requests_student_id ON public.join_requests(student_id);
+CREATE INDEX IF NOT EXISTS idx_teams_leader_id ON public.teams(leader_id);
+
+-- 4. SECURITE : ROW LEVEL SECURITY (RLS)
+ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.join_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+
+-- 5. POLITIQUES D'ACCES
+-- --- TEAMS ---
+DROP POLICY IF EXISTS "Unified teams access" ON public.teams;
+CREATE POLICY "Teams Read" ON public.teams FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Teams Insert" ON public.teams FOR INSERT TO authenticated WITH CHECK (auth.uid() = leader_id);
+CREATE POLICY "Teams Update" ON public.teams FOR UPDATE TO authenticated USING (auth.uid() = leader_id);
+
+-- --- PROFILES ---
+DROP POLICY IF EXISTS "Unified profiles access" ON public.profiles;
+CREATE POLICY "Profiles Read" ON public.profiles FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Profiles Mod" ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
+
+-- --- JOIN REQUESTS ---
+DROP POLICY IF EXISTS "Unified join_requests access" ON public.join_requests;
+CREATE POLICY "Requests Read" ON public.join_requests FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Requests Insert" ON public.join_requests FOR INSERT TO authenticated WITH CHECK (auth.uid() = student_id);
+CREATE POLICY "Requests Mod" ON public.join_requests FOR UPDATE TO authenticated USING (true);
+
+-- --- TEAM MEMBERS ---
+DROP POLICY IF EXISTS "Unified team_members access" ON public.team_members;
+CREATE POLICY "Members Access" ON public.team_members FOR ALL TO authenticated USING (true) WITH CHECK (true);
