@@ -52,6 +52,7 @@ export interface Team {
   motivationUrl?: string;
   lettreMotivationUrl?: string; // Ajouté pour la règle de gestion 5
   teamRequestProfile?: string; // Nouvelle colonne TeamRequestProfile
+  chat?: string; // Système de discussion d'équipe (JSON string)
 }
 
 export interface JoinRequest {

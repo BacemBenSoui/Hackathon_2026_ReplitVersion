@@ -170,28 +170,43 @@ const TeamWorkspace: React.FC<TeamWorkspaceProps> = ({ userProfile, team, setTea
     }
   };
 
-  const askAi = async (e: React.FormEvent) => {
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState<{sender: string, text: string, date: string}[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  useEffect(() => {
+    if (team?.chat) {
+      try {
+        setChatHistory(JSON.parse(team.chat));
+      } catch (e) {
+        setChatHistory([]);
+      }
+    }
+  }, [team?.chat]);
+
+  const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!aiMessage.trim() || !team) return;
-    const userText = aiMessage;
-    setAiHistory(prev => [...prev, { role: 'user', text: userText }]);
-    setAiMessage('');
-    setIsAiLoading(true);
+    if (!chatMessage.trim() || !team || !userProfile) return;
+
+    const newMessage = {
+      sender: `${userProfile.firstName} ${userProfile.lastName}`,
+      text: chatMessage,
+      date: new Date().toISOString()
+    };
+
+    const updatedHistory = [...chatHistory, newMessage];
+    setChatMessage('');
+    setChatHistory(updatedHistory);
+
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: [...aiHistory, { role: 'user', text: userText }].map(m => ({
-          parts: [{ text: m.text }],
-          role: m.role === 'user' ? 'user' : 'model'
-        })),
-        config: { systemInstruction: `Tu es le Coach IA FNCT. Thème: ${team.theme}.` }
-      });
-      setAiHistory(prev => [...prev, { role: 'model', text: response.text || "Service IA indisponible." }]);
-    } catch (error) {
-      setAiHistory(prev => [...prev, { role: 'model', text: "Erreur IA." }]);
-    } finally {
-      setIsAiLoading(false);
+      const { error } = await supabase
+        .from('teams')
+        .update({ chat: JSON.stringify(updatedHistory) })
+        .eq('id', team.id);
+      
+      if (error) throw error;
+    } catch (err) {
+      console.error("Chat error:", err);
     }
   };
 
@@ -210,7 +225,7 @@ const TeamWorkspace: React.FC<TeamWorkspaceProps> = ({ userProfile, team, setTea
           <button onClick={() => setActiveTab('overview')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'overview' ? 'bg-white text-blue-900 shadow-sm' : 'text-blue-900/60 hover:text-blue-900'}`}>Équipe & Projet</button>
           {isLeader && !isFull && <button onClick={() => setActiveTab('recruitment')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'recruitment' ? 'bg-white text-blue-900 shadow-sm' : 'text-blue-900/60 hover:text-blue-900'}`}>Recrutement ({requests.length})</button>}
           {isLeader && <button onClick={() => setActiveTab('communication')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'communication' ? 'bg-white text-blue-900 shadow-sm' : 'text-blue-900/60 hover:text-blue-900'}`}>Communication</button>}
-          <button onClick={() => setActiveTab('ai')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'ai' ? 'bg-white text-blue-900 shadow-sm' : 'text-blue-900/60 hover:text-blue-900'}`}>Coach IA</button>
+          <button onClick={() => setActiveTab('ai')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'ai' ? 'bg-white text-blue-900 shadow-sm' : 'text-blue-900/60 hover:text-blue-900'}`}>Chat Équipe</button>
         </div>
 
         {activeTab === 'overview' && (
@@ -362,30 +377,35 @@ const TeamWorkspace: React.FC<TeamWorkspaceProps> = ({ userProfile, team, setTea
           <div className="bg-white rounded-[8px] border border-[#E0E0E0] shadow-sm flex flex-col h-[600px] animate-in zoom-in-95">
              <div className="p-8 bg-blue-900 text-white flex items-center space-x-4">
                 <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
                 </div>
                 <div>
-                   <h3 className="text-xs font-black uppercase tracking-widest">Assistant Stratégique FNCT</h3>
-                   <p className="text-[9px] font-bold text-blue-300 uppercase">Coach de projet en temps réel</p>
+                   <h3 className="text-xs font-black uppercase tracking-widest">Chat d'Équipe</h3>
+                   <p className="text-[9px] font-bold text-blue-300 uppercase">Discussion en temps réel</p>
                 </div>
              </div>
              <div className="flex-grow p-10 overflow-y-auto space-y-6 bg-gray-50/50">
-                {aiHistory.length === 0 && (
+                {chatHistory.length === 0 && (
                    <div className="text-center py-20">
-                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Comment puis-je aider votre équipe aujourd'hui ?</p>
+                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Commencez la discussion avec votre équipe...</p>
                    </div>
                 )}
-                {aiHistory.map((m, i) => (
-                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[70%] p-6 rounded-2xl text-[10px] font-medium leading-relaxed ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 border border-gray-100 shadow-sm'}`}>
-                         {m.text}
+                {chatHistory.map((m, i) => (
+                   <div key={i} className={`flex ${m.sender === `${userProfile?.firstName} ${userProfile?.lastName}` ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] space-y-1`}>
+                         <div className={`flex items-center space-x-2 ${m.sender === `${userProfile?.firstName} ${userProfile?.lastName}` ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            <span className="text-[8px] font-black text-gray-400 uppercase">{m.sender}</span>
+                            <span className="text-[7px] text-gray-300">{new Date(m.date).toLocaleString()}</span>
+                         </div>
+                         <div className={`p-4 rounded-2xl text-[10px] font-medium leading-relaxed ${m.sender === `${userProfile?.firstName} ${userProfile?.lastName}` ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 border border-gray-100 shadow-sm'}`}>
+                            {m.text}
+                         </div>
                       </div>
                    </div>
                 ))}
-                {isAiLoading && <div className="flex justify-start"><div className="w-12 h-6 bg-gray-200 rounded-full animate-pulse"></div></div>}
              </div>
-             <form onSubmit={askAi} className="p-6 border-t bg-white flex items-center space-x-3">
-                <input type="text" value={aiMessage} onChange={(e) => setAiMessage(e.target.value)} placeholder="Posez une question sur votre innovation..." className="flex-grow p-4 bg-gray-50 border-none rounded-xl text-[10px] outline-none font-bold" />
+             <form onSubmit={sendChatMessage} className="p-6 border-t bg-white flex items-center space-x-3">
+                <input type="text" value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Écrivez un message..." className="flex-grow p-4 bg-gray-50 border-none rounded-xl text-[10px] outline-none font-bold" />
                 <button type="submit" className="p-4 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition-all">
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                 </button>
