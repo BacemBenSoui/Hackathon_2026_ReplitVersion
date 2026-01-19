@@ -22,6 +22,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
     setError(null);
 
     try {
+      // Vérifier si une session active existe déjà
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        onLogin('student');
+        return;
+      }
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,

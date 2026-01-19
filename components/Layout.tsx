@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children, userType = 'public', onNaviga
               <div className="hidden lg:flex items-center space-x-4 border-l border-gray-100 pl-8">
                 <button 
                   onClick={() => onNavigate?.('landing')}
-                  className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
+                  className="text-sm font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
                 >
                   Accueil
                 </button>
