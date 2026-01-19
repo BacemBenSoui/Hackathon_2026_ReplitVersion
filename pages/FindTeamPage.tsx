@@ -18,9 +18,10 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
   const [isLoading, setIsLoading] = useState(true);
   const [filterRegion, setFilterRegion] = useState('');
   const [filterTheme, setFilterTheme] = useState<ThemeType | ''>('');
+  const [filterSkills, setFilterSkills] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  
+
   // État pour la modale de profil membre
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
 
@@ -30,7 +31,7 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
   useEffect(() => {
     setCurrentPage(1);
     fetchTeams();
-  }, [filterRegion, filterTheme]);
+  }, [filterRegion, filterTheme, filterSkills]);
 
   const fetchTeams = async () => {
     setIsLoading(true);
@@ -41,6 +42,7 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
 
     if (filterRegion) query = query.eq('preferred_region', filterRegion);
     if (filterTheme) query = query.eq('theme', filterTheme);
+    if (filterSkills) query = query.ilike('TeamRequestProfile', `%${filterSkills}%`);
 
     const { data } = await query;
     const mappedData = data?.map(t => ({...t, status: t.Statut})) || [];
@@ -82,6 +84,50 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
       <DashboardHeader title="Bourse aux Équipes" subtitle="Trouvez le projet qui correspond à vos expertises." />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-12">
+          <div className="bg-white p-6 rounded-3xl border border-[#E0E0E0] shadow-sm flex flex-col md:flex-row items-end gap-6">
+            <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+              <div>
+                <label className="block text-[9px] font-black text-gray-400 uppercase mb-2 ml-1">Pôle Régional</label>
+                <select 
+                  value={filterRegion} 
+                  onChange={(e) => setFilterRegion(e.target.value)} 
+                  className="w-full p-4 bg-gray-50 rounded-2xl text-[10px] font-black uppercase outline-none border border-transparent focus:border-blue-200 transition-all"
+                >
+                  <option value="">Tous les pôles</option>
+                  {REGIONS.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[9px] font-black text-gray-400 uppercase mb-2 ml-1">Axe Stratégique</label>
+                <select 
+                  value={filterTheme} 
+                  onChange={(e) => setFilterTheme(e.target.value as any)} 
+                  className="w-full p-4 bg-gray-50 rounded-2xl text-[10px] font-black uppercase outline-none border border-transparent focus:border-blue-200 transition-all"
+                >
+                  <option value="">Toutes thématiques</option>
+                  {THEMES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[9px] font-black text-gray-400 uppercase mb-2 ml-1">Compétences recherchées</label>
+                <div className="relative">
+                  <input 
+                    type="text"
+                    value={filterSkills}
+                    onChange={(e) => setFilterSkills(e.target.value)}
+                    placeholder="EX: DESIGN, REACT, FINANCE..."
+                    className="w-full p-4 pl-12 bg-gray-50 rounded-2xl text-[10px] font-black uppercase outline-none border border-transparent focus:border-blue-200 transition-all placeholder:text-gray-300"
+                  />
+                  <svg className="w-4 h-4 text-gray-300 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {(isInTeam || isLeader) && (
           <div className="mb-10 p-6 bg-orange-50 border-l-4 border-orange-500 rounded-r-2xl text-orange-700">
              <p className="text-[10px] font-black uppercase tracking-widest mb-1">Attention Candidat</p>
@@ -89,129 +135,130 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-10">
-          <aside className="w-full lg:w-80">
-            <div className="bg-white p-10 rounded-[8px] border border-[#E0E0E0] shadow-sm sticky top-32 space-y-8">
-              <h3 className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-4">Recherche</h3>
-              <div>
-                <label className="block text-[9px] font-black text-gray-400 uppercase mb-2">Pôle Régional</label>
-                <select value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl text-[10px] font-black uppercase outline-none">
-                  <option value="">Tous les pôles</option>
-                  {REGIONS.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[9px] font-black text-gray-400 uppercase mb-2">Axe Stratégique</label>
-                <select value={filterTheme} onChange={(e) => setFilterTheme(e.target.value as any)} className="w-full p-4 bg-gray-50 rounded-xl text-[10px] font-black uppercase outline-none">
-                  <option value="">Toutes thématiques</option>
-                  {THEMES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
+        <div className="space-y-8">
+          {isLoading ? (
+            <div className="py-20 text-center animate-pulse text-gray-300 font-black uppercase text-xs">Synchronisation...</div>
+          ) : teams.length === 0 ? (
+            <div className="py-24 text-center bg-white rounded-[2rem] border border-dashed border-[#E0E0E0]">
+              <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Aucun projet ne correspond à vos filtres.</p>
             </div>
-          </aside>
-
-          <div className="flex-grow space-y-8">
-            {isLoading ? (
-              <div className="py-20 text-center animate-pulse text-gray-300 font-black uppercase text-xs">Synchronisation...</div>
-            ) : teams.length === 0 ? (
-              <div className="py-24 text-center bg-white rounded-[8px] border border-dashed border-[#E0E0E0]">
-                <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Aucun projet ne correspond à vos filtres.</p>
-              </div>
-            ) : (
-              <>
-                {currentTeams.map(team => {
-                  const members = team.team_members || [];
-                  const hasApplied = userProfile?.applications?.includes(team.id);
-                  // Utilisation de la nouvelle colonne TeamRequestProfile
-                  const requestProfile = team.TeamRequestProfile || "";
-                  
-                  return (
-                    <div key={team.id} className="bg-white border border-[#E0E0E0] rounded-[8px] p-10 shadow-sm hover:shadow-lg transition-all group">
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                        <div className="lg:col-span-5 space-y-4">
-                          <div className="flex flex-wrap items-center gap-2">
-                             <span className="px-2 py-1 bg-blue-900 text-white text-[8px] font-black uppercase rounded">{team.preferred_region}</span>
-                             <span className="px-2 py-1 bg-indigo-50 text-indigo-700 text-[8px] font-black uppercase rounded border border-indigo-100">{team.theme}</span>
-                             <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${members.length === 5 ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>{members.length}/5 Membres</span>
+          ) : (
+            <>
+              {currentTeams.map(team => {
+                const members = team.team_members || [];
+                const hasApplied = userProfile?.applications?.includes(team.id);
+                const requestProfile = team.TeamRequestProfile || "";
+                
+                return (
+                  <div key={team.id} className="bg-white border border-[#E0E0E0] rounded-[2rem] p-8 md:p-12 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-[5rem] -mr-16 -mt-16 group-hover:bg-blue-600 group-hover:scale-150 transition-all duration-500 opacity-20 group-hover:opacity-10"></div>
+                    
+                    <div className="flex flex-col lg:flex-row gap-12 relative z-10">
+                      <div className="lg:col-span-5 space-y-6 flex-grow">
+                        <div className="flex flex-wrap items-center gap-3">
+                           <span className="px-3 py-1 bg-blue-900 text-white text-[9px] font-black uppercase rounded-full shadow-lg shadow-blue-900/20">{team.preferred_region}</span>
+                           <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[9px] font-black uppercase rounded-full border border-indigo-100">{team.theme}</span>
+                           <span className={`px-3 py-1 text-[9px] font-black uppercase rounded-full border transition-colors ${members.length === 5 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                             {members.length === 5 ? 'ÉQUIPE COMPLÈTE' : `${members.length}/5 MEMBRES`}
+                           </span>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-4xl font-black text-blue-900 uppercase tracking-tighter leading-[0.9] mb-4 group-hover:text-blue-600 transition-colors">
+                            {team.name}
+                          </h3>
+                          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                            <p className="text-gray-500 text-sm font-medium italic leading-relaxed">
+                              "{team.description}"
+                            </p>
                           </div>
-                          <h3 className="text-3xl font-black text-blue-900 uppercase tracking-tighter leading-none group-hover:text-blue-600 transition-colors">{team.name}</h3>
-                          <p className="text-gray-500 text-sm font-medium italic leading-relaxed line-clamp-3">"{team.description}"</p>
-                        </div>
-
-                        <div className="lg:col-span-4 border-l border-gray-100 pl-10 flex flex-col justify-between">
-                           <div className="mb-6">
-                              <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 mb-3">Compétences Recherchées</p>
-                              <p className="text-xs text-gray-600 font-medium leading-relaxed">
-                                {requestProfile ? requestProfile : <span className="text-gray-400 italic">Non spécifié par le chef d'équipe.</span>}
-                              </p>
-                           </div>
-                           
-                           <div>
-                              <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 mb-3">Membres Actuels</p>
-                              <div className="flex flex-wrap gap-2">
-                                 {members.map((m: any) => (
-                                   <button 
-                                     key={m.profiles?.id} 
-                                     onClick={() => setSelectedMemberProfile(m.profiles)}
-                                     className="px-3 py-1.5 bg-gray-50 hover:bg-blue-50 text-blue-800 rounded-lg text-[9px] font-bold uppercase border border-gray-200 hover:border-blue-200 transition-all flex items-center space-x-1"
-                                   >
-                                      <span>{m.profiles?.first_name} {m.profiles?.last_name}</span>
-                                      <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                   </button>
-                                 ))}
-                              </div>
-                           </div>
-                        </div>
-
-                        <div className="lg:col-span-3 bg-gray-50 rounded-[2rem] p-8 flex flex-col justify-center">
-                          <button 
-                            onClick={() => handleApply(team.id)}
-                            disabled={hasApplied || members.length >= 5 || isInTeam || isLeader}
-                            className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${hasApplied ? 'bg-orange-100 text-orange-600' : (members.length >= 5 || isInTeam || isLeader) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700'}`}
-                          >
-                            {hasApplied ? 'PITCH EN ATTENTE' : (isInTeam || isLeader) ? 'DÉJÀ MEMBRE' : 'POSTULER'}
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center space-x-2 pt-10">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="p-3 bg-white border border-[#E0E0E0] rounded-xl text-blue-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                    </button>
-                    
-                    <div className="flex items-center bg-white border border-[#E0E0E0] rounded-xl px-2">
-                      {[...Array(totalPages)].map((_, i) => (
-                        <button
-                          key={i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className={`w-10 h-10 text-[10px] font-black rounded-lg transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-blue-600'}`}
+                      <div className="lg:w-96 space-y-8">
+                         <div>
+                            <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                              <span className="w-6 h-[1px] bg-blue-900"></span>
+                              Profil recherché
+                            </p>
+                            <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50 min-h-[100px] flex items-center">
+                              <p className="text-xs text-blue-900 font-bold leading-relaxed">
+                                {requestProfile ? requestProfile : <span className="text-blue-400 italic font-medium">Non spécifié par le chef d'équipe.</span>}
+                              </p>
+                            </div>
+                         </div>
+                         
+                         <div>
+                            <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                              <span className="w-6 h-[1px] bg-blue-900"></span>
+                              Équipage actuel
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                               {members.map((m: any) => (
+                                 <button 
+                                   key={m.profiles?.id} 
+                                   onClick={() => setSelectedMemberProfile(m.profiles)}
+                                   className="px-4 py-2 bg-white hover:bg-blue-600 hover:text-white text-blue-900 rounded-xl text-[9px] font-black uppercase border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-2 group/member"
+                                 >
+                                    <span>{m.profiles?.first_name}</span>
+                                    <svg className="w-3 h-3 opacity-30 group-hover/member:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                 </button>
+                               ))}
+                               {[...Array(5 - members.length)].map((_, i) => (
+                                 <div key={i} className="w-10 h-10 border-2 border-dashed border-gray-100 rounded-xl flex items-center justify-center text-gray-200">
+                                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+
+                        <button 
+                          onClick={() => handleApply(team.id)}
+                          disabled={hasApplied || members.length >= 5 || isInTeam || isLeader}
+                          className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-xl ${hasApplied ? 'bg-orange-500 text-white' : (members.length >= 5 || isInTeam || isLeader) ? 'bg-gray-100 text-gray-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.02] active:scale-95 shadow-blue-600/20'}`}
                         >
-                          {i + 1}
+                          {hasApplied ? 'Candidature envoyée' : (isInTeam || isLeader) ? 'Déjà engagé' : 'Embarquer'}
                         </button>
-                      ))}
+                      </div>
                     </div>
-
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="p-3 bg-white border border-[#E0E0E0] rounded-xl text-blue-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                    </button>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                );
+              })}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center space-x-3 pt-12">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-4 bg-white border border-gray-100 rounded-2xl text-blue-900 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  
+                  <div className="flex items-center bg-white border border-gray-100 rounded-3xl px-2 shadow-sm py-1">
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button
+                        key={i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-12 h-12 text-[10px] font-black rounded-2xl transition-all duration-300 ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-gray-400 hover:bg-gray-50 hover:text-blue-600'}`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-4 bg-white border border-gray-100 rounded-2xl text-blue-900 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
 
