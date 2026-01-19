@@ -128,8 +128,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         <div className="absolute inset-0 opacity-20 grayscale bg-[url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80')] bg-cover bg-center scale-110"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full pt-20">
-          {/* BOUTONS GUIDES - Positionnés en haut à droite de la section Hero */}
-          <div className="absolute top-6 right-4 sm:right-8 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 z-50">
+          {/* LOGO 50 ANS - Positionné en haut à droite */}
+          <div className="absolute top-6 right-4 sm:right-8 z-50">
+            <img 
+              src="/assets/logo_50.png" 
+              alt="Logo 50 Ans FNCT" 
+              className="h-24 sm:h-32 w-auto object-contain"
+            />
+          </div>
+
+          {/* BOUTONS GUIDES - Déplacés plus bas pour ne pas chevaucher le logo */}
+          <div className="absolute top-36 right-4 sm:right-8 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 z-50">
             {/* Bouton Jaune : Guide de Participation */}
             <button 
               onClick={openGuideDidactiel}
