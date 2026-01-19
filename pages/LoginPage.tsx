@@ -29,8 +29,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
 
       if (authError) throw authError;
       
-      // onLogin est passé par App.tsx et appelle navigate('dashboard')
-      // App.tsx s'occupera ensuite de rediriger vers Admin ou Student selon le profil récupéré.
       onLogin('student'); 
     } catch (err: any) {
       setError(err.message || "Erreur de connexion. Vérifiez vos identifiants.");
@@ -40,7 +38,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
   };
 
   return (
-    <Layout onNavigate={onNavigate}>
+    <Layout onNavigate={onNavigate} userType="public">
       <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl border border-gray-100">
           <div>

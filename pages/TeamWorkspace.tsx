@@ -198,7 +198,7 @@ const TeamWorkspace: React.FC<TeamWorkspaceProps> = ({ userProfile, team, setTea
   if (!team) return null;
 
   return (
-    <Layout userType="student" onNavigate={onNavigate} currentTeamId={team.id}>
+    <Layout userType="student" onNavigate={onNavigate} currentTeamId={team.id} userName={`${userProfile?.firstName} ${userProfile?.lastName}`}>
       <DashboardHeader 
         title={`Espace Pilotage : ${team.name}`} 
         subtitle={`${team.theme} | Région : ${team.preferredRegion}`}

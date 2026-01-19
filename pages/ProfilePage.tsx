@@ -74,6 +74,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userProfile, setUserProfile, 
 
       if (error) throw error;
       await refreshData();
+      
+      // Navigation intelligente après synchronisation
+      if (userProfile?.currentTeamId) {
+        onNavigate('team-workspace');
+      } else {
+        // Si pas d'équipe, on propose soit de créer soit de chercher
+        // Par défaut, le dashboard offre ces deux choix, donc on y va
+        onNavigate('dashboard');
+      }
+      
       alert("Profil synchronisé. Votre score d'éligibilité est de " + scoreBreakdown.total + "%");
     } catch (err: any) {
       alert("Erreur : " + err.message);
@@ -97,7 +107,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userProfile, setUserProfile, 
   const allMetierSkills = useMemo(() => Object.values(METIER_SKILLS).flat(), []);
 
   return (
-    <Layout userType="student" onNavigate={onNavigate} currentTeamId={userProfile?.currentTeamId}>
+    <Layout userType="student" onNavigate={onNavigate} currentTeamId={userProfile?.currentTeamId} userName={`${userProfile?.firstName} ${userProfile?.lastName}`}>
       <DashboardHeader title="Mon Profil Candidat" subtitle="Optimisez votre dossier pour attirer les meilleurs projets." />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">

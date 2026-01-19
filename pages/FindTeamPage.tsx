@@ -80,7 +80,7 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
   };
 
   return (
-    <Layout userType="student" onNavigate={onNavigate}>
+    <Layout userType="student" onNavigate={onNavigate} currentTeamId={userProfile?.currentTeamId} userName={userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : ""}>
       <DashboardHeader title="Bourse aux Équipes" subtitle="Trouvez le projet qui correspond à vos expertises." />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

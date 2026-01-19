@@ -7,9 +7,10 @@ interface LayoutProps {
   userType?: 'student' | 'admin' | 'public';
   onNavigate?: (page: string) => void;
   currentTeamId?: string | null;
+  userName?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, userType = 'public', onNavigate, currentTeamId }) => {
+const Layout: React.FC<LayoutProps> = ({ children, userType = 'public', onNavigate, currentTeamId, userName }) => {
   const isInTeam = !!currentTeamId;
   const [showRules, setShowRules] = useState(false);
 
@@ -99,6 +100,18 @@ const Layout: React.FC<LayoutProps> = ({ children, userType = 'public', onNaviga
         <div className="bg-blue-900 text-white border-b border-blue-800 sticky top-20 z-40 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center overflow-x-auto no-scrollbar py-3 space-x-8">
+              {userName && (
+                <div className="flex-shrink-0 flex items-center space-x-2 pr-6 border-r border-blue-800">
+                  <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-100 whitespace-nowrap">
+                    Espace {userName}
+                  </span>
+                </div>
+              )}
               <button onClick={() => onNavigate?.('dashboard')} className="flex-shrink-0 text-[10px] font-black uppercase tracking-widest hover:text-blue-300 transition-colors">Tableau de bord</button>
               <button onClick={() => onNavigate?.('profile')} className="flex-shrink-0 text-[10px] font-black uppercase tracking-widest hover:text-blue-300 transition-colors">Mon Profil</button>
               {!isInTeam ? (

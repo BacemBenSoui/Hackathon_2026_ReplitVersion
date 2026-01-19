@@ -251,9 +251,13 @@ const App: React.FC = () => {
     }
   };
 
+  const userName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : undefined;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {renderPage()}
+      <div className="flex-grow flex flex-col">
+        {renderPage()}
+      </div>
     </div>
   );
 };

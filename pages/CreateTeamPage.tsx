@@ -91,7 +91,7 @@ const CreateTeamPage: React.FC<CreateTeamPageProps> = ({ userProfile, onNavigate
   if (isInTeam || hasPendingApplications) return null;
 
   return (
-    <Layout userType="student" onNavigate={onNavigate}>
+    <Layout userType="student" onNavigate={onNavigate} currentTeamId={userProfile?.currentTeamId} userName={userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : ""}>
       <DashboardHeader title="Nouveau Projet Municipal" subtitle="Lancez votre innovation pour les 50 ans de la FNCT." />
       <main className="max-w-4xl mx-auto px-4 py-10">
         <div className="mb-8 p-6 bg-blue-50 border-l-4 border-blue-600 rounded-r-2xl">
