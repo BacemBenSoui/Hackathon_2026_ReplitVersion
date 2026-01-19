@@ -128,34 +128,37 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         <div className="absolute inset-0 opacity-20 grayscale bg-[url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80')] bg-cover bg-center scale-110"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full pt-20">
-          {/* LOGO 50 ANS - Positionné en haut à droite */}
-          <div className="absolute top-6 right-4 sm:right-8 z-50">
-            <img 
-              src="/assets/logo_50.png" 
-              alt="Logo 50 Ans FNCT" 
-              className="h-24 sm:h-32 w-auto object-contain"
-            />
-          </div>
+          {/* BOUTONS GUIDES & LOGO - Groupe à droite */}
+          <div className="absolute top-6 right-4 sm:right-8 flex flex-col items-stretch space-y-4 z-50">
+            {/* Conteneur des boutons */}
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6">
+              {/* Bouton Jaune : Guide de Participation */}
+              <button 
+                onClick={openGuideDidactiel}
+                className="flex items-center justify-center space-x-3 px-6 py-3 bg-[#fbbf24] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-yellow-500 hover:scale-105 transition-all border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>GUIDE DE PARTICIPATION</span>
+              </button>
+              
+              {/* Bouton Vert : Guide du Candidat */}
+              <button 
+                onClick={openGuideParticipation}
+                className="flex items-center justify-center space-x-3 px-6 py-3 bg-[#10b981] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-600 hover:scale-105 transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                <span>GUIDE DU CANDIDAT</span>
+              </button>
+            </div>
 
-          {/* BOUTONS GUIDES - Déplacés plus bas pour ne pas chevaucher le logo */}
-          <div className="absolute top-36 right-4 sm:right-8 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 z-50">
-            {/* Bouton Jaune : Guide de Participation */}
-            <button 
-              onClick={openGuideDidactiel}
-              className="flex items-center space-x-3 px-6 py-3 bg-[#fbbf24] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-yellow-500 hover:scale-105 transition-all border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span>GUIDE DE PARTICIPATION</span>
-            </button>
-            
-            {/* Bouton Vert : Guide du Candidat */}
-            <button 
-              onClick={openGuideParticipation}
-              className="flex items-center space-x-3 px-6 py-3 bg-[#10b981] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-600 hover:scale-105 transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-              <span>GUIDE DU CANDIDAT</span>
-            </button>
+            {/* LOGO 50 ANS - Largeur adaptée au groupe de boutons */}
+            <div className="w-full">
+              <img 
+                src="/assets/logo_50.png" 
+                alt="Logo 50 Ans FNCT" 
+                className="w-full h-auto object-contain rounded-xl shadow-md"
+              />
+            </div>
           </div>
 
           <div className="max-w-4xl mt-24 sm:mt-0">
