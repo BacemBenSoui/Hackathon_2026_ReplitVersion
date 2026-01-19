@@ -32,6 +32,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError("Le mot de passe doit comporter au moins 6 caractères.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {

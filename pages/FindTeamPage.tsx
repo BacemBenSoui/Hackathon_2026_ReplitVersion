@@ -18,6 +18,8 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
   const [isLoading, setIsLoading] = useState(true);
   const [filterRegion, setFilterRegion] = useState('');
   const [filterTheme, setFilterTheme] = useState<ThemeType | ''>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   
   // État pour la modale de profil membre
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
@@ -26,6 +28,7 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
   const isLeader = userProfile?.teamRole === 'leader';
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchTeams();
   }, [filterRegion, filterTheme]);
 
@@ -33,20 +36,21 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
     setIsLoading(true);
     let query = supabase
       .from('teams')
-      // MAPPAGE BDD : Ajout de email, phone, level dans la sélection des profils
       .select(`*, team_members(role, profiles(id, first_name, last_name, university, level, email, phone, metier_skills, tech_skills, other_skills, cv_url))`)
-      // MAPPAGE BDD : Filtrer sur Statut (text) = 'incomplete'
       .eq('Statut', 'incomplete');
 
     if (filterRegion) query = query.eq('preferred_region', filterRegion);
     if (filterTheme) query = query.eq('theme', filterTheme);
 
     const { data } = await query;
-    // On mappe Statut -> status pour le front si besoin
     const mappedData = data?.map(t => ({...t, status: t.Statut})) || [];
     setTeams(mappedData);
     setIsLoading(false);
   };
+
+  const totalPages = Math.ceil(teams.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTeams = teams.slice(startIndex, startIndex + itemsPerPage);
 
   const handleApply = async (teamId: string) => {
     if (isInTeam || isLeader) {
@@ -114,63 +118,98 @@ const FindTeamPage: React.FC<FindTeamPageProps> = ({ userProfile, setUserProfile
                 <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Aucun projet ne correspond à vos filtres.</p>
               </div>
             ) : (
-              teams.map(team => {
-                const members = team.team_members || [];
-                const hasApplied = userProfile?.applications?.includes(team.id);
-                // Utilisation de la nouvelle colonne TeamRequestProfile
-                const requestProfile = team.TeamRequestProfile || "";
-                
-                return (
-                  <div key={team.id} className="bg-white border border-[#E0E0E0] rounded-[8px] p-10 shadow-sm hover:shadow-lg transition-all group">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                      <div className="lg:col-span-5 space-y-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                           <span className="px-2 py-1 bg-blue-900 text-white text-[8px] font-black uppercase rounded">{team.preferred_region}</span>
-                           <span className="px-2 py-1 bg-indigo-50 text-indigo-700 text-[8px] font-black uppercase rounded border border-indigo-100">{team.theme}</span>
-                           <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${members.length === 5 ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>{members.length}/5 Membres</span>
+              <>
+                {currentTeams.map(team => {
+                  const members = team.team_members || [];
+                  const hasApplied = userProfile?.applications?.includes(team.id);
+                  // Utilisation de la nouvelle colonne TeamRequestProfile
+                  const requestProfile = team.TeamRequestProfile || "";
+                  
+                  return (
+                    <div key={team.id} className="bg-white border border-[#E0E0E0] rounded-[8px] p-10 shadow-sm hover:shadow-lg transition-all group">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                        <div className="lg:col-span-5 space-y-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                             <span className="px-2 py-1 bg-blue-900 text-white text-[8px] font-black uppercase rounded">{team.preferred_region}</span>
+                             <span className="px-2 py-1 bg-indigo-50 text-indigo-700 text-[8px] font-black uppercase rounded border border-indigo-100">{team.theme}</span>
+                             <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${members.length === 5 ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>{members.length}/5 Membres</span>
+                          </div>
+                          <h3 className="text-3xl font-black text-blue-900 uppercase tracking-tighter leading-none group-hover:text-blue-600 transition-colors">{team.name}</h3>
+                          <p className="text-gray-500 text-sm font-medium italic leading-relaxed line-clamp-3">"{team.description}"</p>
                         </div>
-                        <h3 className="text-3xl font-black text-blue-900 uppercase tracking-tighter leading-none group-hover:text-blue-600 transition-colors">{team.name}</h3>
-                        <p className="text-gray-500 text-sm font-medium italic leading-relaxed line-clamp-3">"{team.description}"</p>
-                      </div>
 
-                      <div className="lg:col-span-4 border-l border-gray-100 pl-10 flex flex-col justify-between">
-                         <div className="mb-6">
-                            <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 mb-3">Compétences Recherchées</p>
-                            <p className="text-xs text-gray-600 font-medium leading-relaxed">
-                              {requestProfile ? requestProfile : <span className="text-gray-400 italic">Non spécifié par le chef d'équipe.</span>}
-                            </p>
-                         </div>
-                         
-                         <div>
-                            <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 mb-3">Membres Actuels</p>
-                            <div className="flex flex-wrap gap-2">
-                               {members.map((m: any) => (
-                                 <button 
-                                   key={m.profiles?.id} 
-                                   onClick={() => setSelectedMemberProfile(m.profiles)}
-                                   className="px-3 py-1.5 bg-gray-50 hover:bg-blue-50 text-blue-800 rounded-lg text-[9px] font-bold uppercase border border-gray-200 hover:border-blue-200 transition-all flex items-center space-x-1"
-                                 >
-                                    <span>{m.profiles?.first_name} {m.profiles?.last_name}</span>
-                                    <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                 </button>
-                               ))}
-                            </div>
-                         </div>
-                      </div>
+                        <div className="lg:col-span-4 border-l border-gray-100 pl-10 flex flex-col justify-between">
+                           <div className="mb-6">
+                              <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 mb-3">Compétences Recherchées</p>
+                              <p className="text-xs text-gray-600 font-medium leading-relaxed">
+                                {requestProfile ? requestProfile : <span className="text-gray-400 italic">Non spécifié par le chef d'équipe.</span>}
+                              </p>
+                           </div>
+                           
+                           <div>
+                              <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 mb-3">Membres Actuels</p>
+                              <div className="flex flex-wrap gap-2">
+                                 {members.map((m: any) => (
+                                   <button 
+                                     key={m.profiles?.id} 
+                                     onClick={() => setSelectedMemberProfile(m.profiles)}
+                                     className="px-3 py-1.5 bg-gray-50 hover:bg-blue-50 text-blue-800 rounded-lg text-[9px] font-bold uppercase border border-gray-200 hover:border-blue-200 transition-all flex items-center space-x-1"
+                                   >
+                                      <span>{m.profiles?.first_name} {m.profiles?.last_name}</span>
+                                      <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                   </button>
+                                 ))}
+                              </div>
+                           </div>
+                        </div>
 
-                      <div className="lg:col-span-3 bg-gray-50 rounded-[2rem] p-8 flex flex-col justify-center">
-                        <button 
-                          onClick={() => handleApply(team.id)}
-                          disabled={hasApplied || members.length >= 5 || isInTeam || isLeader}
-                          className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${hasApplied ? 'bg-orange-100 text-orange-600' : (members.length >= 5 || isInTeam || isLeader) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700'}`}
-                        >
-                          {hasApplied ? 'PITCH EN ATTENTE' : (isInTeam || isLeader) ? 'DÉJÀ MEMBRE' : 'POSTULER'}
-                        </button>
+                        <div className="lg:col-span-3 bg-gray-50 rounded-[2rem] p-8 flex flex-col justify-center">
+                          <button 
+                            onClick={() => handleApply(team.id)}
+                            disabled={hasApplied || members.length >= 5 || isInTeam || isLeader}
+                            className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${hasApplied ? 'bg-orange-100 text-orange-600' : (members.length >= 5 || isInTeam || isLeader) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700'}`}
+                          >
+                            {hasApplied ? 'PITCH EN ATTENTE' : (isInTeam || isLeader) ? 'DÉJÀ MEMBRE' : 'POSTULER'}
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center space-x-2 pt-10">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="p-3 bg-white border border-[#E0E0E0] rounded-xl text-blue-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    
+                    <div className="flex items-center bg-white border border-[#E0E0E0] rounded-xl px-2">
+                      {[...Array(totalPages)].map((_, i) => (
+                        <button
+                          key={i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`w-10 h-10 text-[10px] font-black rounded-lg transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-blue-600'}`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="p-3 bg-white border border-[#E0E0E0] rounded-xl text-blue-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
                   </div>
-                );
-              })
+                )}
+              </>
             )}
           </div>
         </div>
