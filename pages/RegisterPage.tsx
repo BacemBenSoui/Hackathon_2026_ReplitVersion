@@ -14,7 +14,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
     email: '',
     phone: '',
     university: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +35,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
 
     if (formData.password.length < 6) {
       setError("Le mot de passe doit comporter au moins 6 caractères.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
 
@@ -120,6 +126,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-1">Mot de passe</label>
               <input required type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full px-4 py-3 bg-slate-800 border-none rounded-xl text-white text-sm font-medium focus:ring-4 focus:ring-blue-100 outline-none" />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-1">Confirmer le mot de passe</label>
+              <input required type="password" value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} className="w-full px-4 py-3 bg-slate-800 border-none rounded-xl text-white text-sm font-medium focus:ring-4 focus:ring-blue-100 outline-none" />
             </div>
 
             {/* Section Règlement */}
